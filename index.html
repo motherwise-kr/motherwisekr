@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="마더와이즈" />
+  <meta name="theme-color" content="#d97b6c" />
+  <title>마더와이즈 Motherwise</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --cream: #fdf6ee; --beige: #f5e6d3; --blush: #f2c4b0;
+      --rose: #d97b6c; --rose-dark: #b85c4e; --brown: #7a4a3a;
+      --text: #3d2b1f; --text-mid: #6b4c3b; --text-light: #a07060;
+      --white: #fff; --green: #5a8f6a;
+      --shadow: 0 2px 16px rgba(120,70,50,.10);
+      --tab-h: 64px;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-top: env(safe-area-inset-top, 0px);
+    }
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      font-family: 'Pretendard Variable', 'Pretendard', -apple-system, 'Apple SD Gothic Neo', sans-serif;
+      background: var(--cream); color: var(--text);
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior: none;
+    }
+
+    /* ── App Shell ── */
+    .app { display: flex; flex-direction: column; height: 100%; height: 100dvh; }
+
+    /* ── Header ── */
+    .app-header {
+      background: rgba(253,246,238,.96); backdrop-filter: blur(14px);
+      padding: calc(var(--safe-top) + 10px) 1.2rem 10px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid rgba(210,150,120,.14);
+      flex-shrink: 0; z-index: 10;
+    }
+    .header-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+    .header-logo-icon { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--blush), var(--rose)); display: flex; align-items: center; justify-content: center; font-size: 15px; }
+    .header-logo-text { font-family: 'Noto Serif KR', serif; font-size: 1rem; font-weight: 700; color: var(--brown); }
+    .header-logo-sub { font-size: .6rem; color: var(--text-light); letter-spacing: .08em; }
+    .header-actions { display: flex; gap: .5rem; align-items: center; }
+    .btn-install { background: rgba(217,123,108,.12); color: var(--rose-dark); border: none; border-radius: 20px; padding: .32rem .8rem; font-family: inherit; font-size: .76rem; font-weight: 600; cursor: pointer; display: none; }
+    .btn-install.show { display: block; }
+
+    /* ── Tab Content ── */
+    .tab-content {
+      flex: 1; overflow: hidden; position: relative;
+    }
+    .tab-page {
+      position: absolute; inset: 0;
+      overflow-y: auto; overflow-x: hidden;
+      opacity: 0; pointer-events: none;
+      transform: translateY(8px);
+      transition: opacity .22s ease, transform .22s ease;
+      padding-bottom: calc(var(--tab-h) + var(--safe-bottom) + 12px);
+      -webkit-overflow-scrolling: touch;
+    }
+    .tab-page.active {
+      opacity: 1; pointer-events: all; transform: translateY(0);
+    }
+
+    /* ── Bottom Nav ── */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 20;
+      background: rgba(253,246,238,.96); backdrop-filter: blur(14px);
+      border-top: 1px solid rgba(210,150,120,.14);
+      display: flex;
+      height: calc(var(--tab-h) + var(--safe-bottom));
+      padding-bottom: var(--safe-bottom);
+    }
+    .nav-item {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px; cursor: pointer; border: none; background: none;
+      color: var(--text-light); font-family: inherit; font-size: .68rem; font-weight: 500;
+      transition: color .18s; padding: 0; -webkit-tap-highlight-color: transparent;
+    }
+    .nav-item .nav-icon { font-size: 1.35rem; line-height: 1; transition: transform .18s; }
+    .nav-item.active { color: var(--rose); }
+    .nav-item.active .nav-icon { transform: scale(1.15); }
+
+    /* ── Shared Components ── */
+    .page-section { padding: 1.2rem; }
+    .section-header { margin-bottom: 1rem; }
+    .section-label { font-size: .7rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--rose); }
+    .section-title { font-family: 'Noto Serif KR', serif; font-size: 1.15rem; font-weight: 700; color: var(--brown); margin-top: .15rem; }
+
+    .card {
+      background: var(--white); border-radius: 16px;
+      box-shadow: var(--shadow); overflow: hidden;
+    }
+    .card + .card { margin-top: .9rem; }
+
+    .pill { display: inline-block; font-size: .68rem; font-weight: 700; letter-spacing: .06em; padding: .18rem .6rem; border-radius: 50px; }
+    .pill-rose { background: rgba(217,123,108,.12); color: var(--rose-dark); }
+    .pill-green { background: rgba(90,143,106,.12); color: var(--green); }
+    .pill-brown { background: rgba(122,74,58,.1); color: var(--brown); }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+      padding: .65rem 1.3rem; border-radius: 50px;
+      font-family: inherit; font-size: .88rem; font-weight: 600;
+      cursor: pointer; border: none; transition: all .2s; text-decoration: none;
+    }
+    .btn-primary { background: var(--rose); color: white; }
+    .btn-primary:hover, .btn-primary:active { background: var(--rose-dark); }
+    .btn-outline { background: transparent; color: var(--brown); border: 1.5px solid rgba(120,74,58,.25); }
+    .btn-block { width: 100%; }
+    .btn-sm { padding: .45rem .9rem; font-size: .8rem; }
+
+    /* ── Segment Control ── */
+    .segment { display: flex; background: var(--beige); border-radius: 12px; padding: 3px; margin-bottom: 1rem; }
+    .seg-btn { flex: 1; padding: .5rem; border: none; background: none; border-radius: 9px; font-family: inherit; font-size: .82rem; font-weight: 600; color: var(--text-light); cursor: pointer; transition: all .2s; }
+    .seg-btn.active { background: white; color: var(--brown); box-shadow: 0 1px 6px rgba(120,70,50,.12); }
+
+    /* ── HOME TAB ── */
+    .home-hero {
+      background: linear-gradient(160deg, var(--beige) 0%, rgba(242,196,176,.3) 100%);
+      padding: 1.6rem 1.2rem 1.2rem;
+      position: relative; overflow: hidden;
+    }
+    .home-hero::after { content: '🌿'; position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); font-size: 5rem; opacity: .12; pointer-events: none; }
+    .home-hero-label { font-size: .72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--rose); margin-bottom: .4rem; }
+    .home-hero-title { font-family: 'Noto Serif KR', serif; font-size: 1.35rem; font-weight: 700; color: var(--brown); line-height: 1.4; margin-bottom: .6rem; word-break: keep-all; }
+    .home-hero-desc { font-size: .84rem; color: var(--text-mid); line-height: 1.7; word-break: keep-all; }
+    .home-hero-chips { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .9rem; }
+    .home-hero-chip { font-size: .76rem; font-weight: 600; padding: .28rem .75rem; border-radius: 50px; background: white; color: var(--text-mid); border: 1px solid rgba(180,130,110,.2); }
+
+    .seminar-card { padding: 1.1rem; }
+    .seminar-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: .7rem; margin-bottom: .6rem; }
+    .seminar-icon { font-size: 1.8rem; }
+    .seminar-module { font-size: .68rem; font-weight: 700; color: var(--rose); letter-spacing: .06em; }
+    .seminar-name { font-size: 1rem; font-weight: 700; color: var(--brown); margin-top: .1rem; }
+    .seminar-desc { font-size: .82rem; color: var(--text-light); line-height: 1.6; word-break: keep-all; margin-bottom: .8rem; }
+    .seminar-meta { font-size: .76rem; color: var(--text-light); margin-bottom: .9rem; }
+    .seminar-actions { display: flex; gap: .6rem; }
+    .seminar-actions .btn { flex: 1; font-size: .82rem; padding: .55rem .8rem; }
+
+    .news-item { padding: 1rem 1.1rem; }
+    .news-item + .news-item { border-top: 1px solid rgba(200,160,140,.1); }
+    .news-item-top { display: flex; align-items: center; gap: .5rem; margin-bottom: .4rem; }
+    .news-item-title { font-size: .9rem; font-weight: 700; color: var(--brown); line-height: 1.45; word-break: keep-all; }
+    .news-item-excerpt { font-size: .8rem; color: var(--text-light); line-height: 1.6; margin-top: .3rem; word-break: keep-all; }
+    .news-item-date { font-size: .72rem; color: var(--text-light); margin-left: auto; }
+
+    /* ── MEDIA TAB ── */
+    .media-card { display: flex; gap: .9rem; padding: 1rem; align-items: flex-start; }
+    .media-thumb {
+      width: 100px; height: 68px; border-radius: 10px; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--beige), var(--blush));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem; overflow: hidden; position: relative; cursor: pointer;
+    }
+    .media-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .media-thumb-play {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,.25); color: white; font-size: 1.4rem;
+    }
+    .media-info { flex: 1; min-width: 0; }
+    .media-title { font-size: .88rem; font-weight: 700; color: var(--brown); line-height: 1.4; word-break: keep-all; cursor: pointer; }
+    .media-title:hover { color: var(--rose); }
+    .media-meta { font-size: .74rem; color: var(--text-light); margin-top: .3rem; }
+    .media-desc { font-size: .78rem; color: var(--text-light); margin-top: .25rem; line-height: 1.5; word-break: keep-all; }
+
+    .media-empty { text-align: center; padding: 3rem 1.5rem; color: var(--text-light); }
+    .media-empty .e-icon { font-size: 2.5rem; margin-bottom: .6rem; }
+    .media-empty p { font-size: .88rem; }
+
+    /* ── DEVOTION TAB ── */
+    .devot-card { padding: 1.2rem; }
+    .devot-card + .devot-card { margin-top: .8rem; }
+    .devot-title { font-size: .95rem; font-weight: 700; color: var(--brown); line-height: 1.45; word-break: keep-all; margin: .4rem 0; }
+    .devot-scripture { font-size: .78rem; color: var(--rose-dark); font-style: italic; margin-bottom: .5rem; }
+    .devot-preview { font-size: .82rem; color: var(--text-light); line-height: 1.65; word-break: keep-all; }
+    .devot-footer { display: flex; align-items: center; justify-content: space-between; margin-top: .8rem; }
+    .devot-date { font-size: .72rem; color: var(--text-light); }
+    .devot-read { font-size: .78rem; font-weight: 600; color: var(--rose); cursor: pointer; }
+
+    /* ── MALL TAB ── */
+    .mall-banner {
+      background: linear-gradient(135deg, var(--beige) 0%, rgba(242,196,176,.4) 100%);
+      margin: 1.2rem; border-radius: 16px; padding: 1.4rem;
+      display: flex; align-items: center; gap: 1rem;
+    }
+    .mall-banner-icon { font-size: 2.5rem; flex-shrink: 0; }
+    .mall-banner-title { font-family: 'Noto Serif KR', serif; font-size: 1rem; font-weight: 700; color: var(--brown); margin-bottom: .3rem; }
+    .mall-banner-desc { font-size: .8rem; color: var(--text-mid); line-height: 1.5; }
+
+    .book-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; padding: 0 1.2rem 1.2rem; }
+    .book-card { background: white; border-radius: 14px; padding: 1.1rem; text-align: center; box-shadow: var(--shadow); }
+    .book-card-icon { font-size: 2.2rem; margin-bottom: .5rem; }
+    .book-card-title { font-size: .95rem; font-weight: 700; color: var(--brown); }
+    .book-card-sub { font-size: .72rem; color: var(--text-light); margin-top: .15rem; }
+
+    .mall-cta { margin: 0 1.2rem 1.2rem; }
+    .coming-soon { background: rgba(122,74,58,.05); border: 1.5px dashed rgba(122,74,58,.2); border-radius: 14px; padding: 1.2rem; text-align: center; margin: 0 1.2rem 1.2rem; }
+    .coming-soon-icon { font-size: 1.8rem; margin-bottom: .4rem; }
+    .coming-soon-text { font-size: .82rem; color: var(--text-light); line-height: 1.6; }
+
+    /* ── MORE TAB ── */
+    .more-menu-item {
+      display: flex; align-items: center; gap: .9rem;
+      padding: 1rem 1.2rem; cursor: pointer;
+      transition: background .15s; text-decoration: none;
+    }
+    .more-menu-item:hover, .more-menu-item:active { background: rgba(217,123,108,.05); }
+    .more-menu-item + .more-menu-item { border-top: 1px solid rgba(200,160,140,.1); }
+    .more-menu-icon { width: 40px; height: 40px; border-radius: 10px; background: rgba(217,123,108,.1); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+    .more-menu-text {}
+    .more-menu-label { font-size: .9rem; font-weight: 700; color: var(--brown); }
+    .more-menu-desc { font-size: .76rem; color: var(--text-light); margin-top: .1rem; }
+    .more-menu-arrow { margin-left: auto; color: var(--text-light); font-size: .9rem; }
+
+    .more-profile { background: linear-gradient(135deg, var(--beige), rgba(242,196,176,.4)); padding: 1.4rem 1.2rem; display: flex; align-items: center; gap: 1rem; }
+    .more-profile-icon { font-size: 3rem; }
+    .more-profile-title { font-family: 'Noto Serif KR', serif; font-size: 1.1rem; font-weight: 700; color: var(--brown); }
+    .more-profile-desc { font-size: .78rem; color: var(--text-mid); margin-top: .2rem; line-height: 1.5; }
+
+    /* ── Modal / Sheet ── */
+    .sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 100; opacity: 0; pointer-events: none; transition: opacity .25s; }
+    .sheet-overlay.open { opacity: 1; pointer-events: all; }
+    .sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 101; background: white; border-radius: 24px 24px 0 0; padding: 0 0 calc(var(--safe-bottom) + 1.5rem); max-height: 88vh; overflow-y: auto; transform: translateY(100%); transition: transform .3s cubic-bezier(.32,.72,0,1); }
+    .sheet.open { transform: translateY(0); }
+    .sheet-handle { width: 36px; height: 4px; background: rgba(0,0,0,.1); border-radius: 2px; margin: .8rem auto; }
+    .sheet-header { padding: .5rem 1.4rem 1rem; border-bottom: 1px solid rgba(200,160,140,.12); }
+    .sheet-cat { font-size: .72rem; font-weight: 700; color: var(--rose); background: rgba(217,123,108,.1); padding: .18rem .6rem; border-radius: 50px; display: inline-block; margin-bottom: .5rem; }
+    .sheet-title { font-family: 'Noto Serif KR', serif; font-size: 1.2rem; font-weight: 700; color: var(--brown); line-height: 1.4; word-break: keep-all; }
+    .sheet-date { font-size: .76rem; color: var(--text-light); margin-top: .3rem; }
+    .sheet-body { padding: 1.2rem 1.4rem; font-size: .92rem; color: var(--text-mid); line-height: 1.9; white-space: pre-line; word-break: keep-all; }
+    .sheet-scripture { background: rgba(217,123,108,.06); border-left: 3px solid var(--blush); border-radius: 0 8px 8px 0; padding: .7rem 1rem; margin-bottom: 1rem; font-size: .84rem; color: var(--rose-dark); font-style: italic; line-height: 1.6; }
+
+    /* ── Skeleton loading ── */
+    .skel { background: linear-gradient(90deg, var(--beige) 25%, rgba(245,230,211,.5) 50%, var(--beige) 75%); background-size: 200% 100%; animation: skel 1.4s infinite; border-radius: 8px; }
+    @keyframes skel { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    .skel-text { height: 14px; margin-bottom: 8px; }
+    .skel-text-sm { height: 11px; }
+
+    /* ── Utilities ── */
+    .mt-1 { margin-top: .6rem; } .mt-2 { margin-top: 1.2rem; }
+    .divider { height: 8px; background: var(--beige); margin: 0; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <header class="app-header">
+    <a class="header-logo" href="#">
+      <div class="header-logo-icon">🌿</div>
+      <div>
+        <div class="header-logo-text">마더와이즈</div>
+        <div class="header-logo-sub">MOTHERWISE</div>
+      </div>
+    </a>
+    <div class="header-actions">
+      <button class="btn-install" id="installBtn">📲 앱 설치</button>
+    </div>
+  </header>
+
+  <!-- Tab Content -->
+  <div class="tab-content">
+
+    <!-- ① 홈 -->
+    <div class="tab-page active" id="page-home">
+      <div class="home-hero">
+        <div class="home-hero-label">마더와이즈 사역 세미나</div>
+        <h1 class="home-hero-title" id="heroTitle">어머니의 삶을<br />지혜로 세우는 여정</h1>
+        <p class="home-hero-desc" id="heroDesc">지혜, 자유, 회복, 동행의 네 가지 여정을 함께 걸어가는 어머니 사역 세미나입니다.</p>
+        <div class="home-hero-chips">
+          <span class="home-hero-chip">🌿 지혜</span>
+          <span class="home-hero-chip">🕊️ 자유</span>
+          <span class="home-hero-chip">💛 회복</span>
+          <span class="home-hero-chip">🤝 동행</span>
+        </div>
+      </div>
+
+      <div class="page-section">
+        <div class="section-header">
+          <div class="section-label">Seminar</div>
+          <div class="section-title">세미나 일정</div>
+        </div>
+        <div id="homeSeminars">
+          <div class="card"><div class="seminar-card"><div class="skel skel-text" style="width:60%"></div><div class="skel skel-text" style="width:80%;margin-top:8px"></div><div class="skel skel-text-sm" style="width:40%;margin-top:8px"></div></div></div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="page-section">
+        <div class="section-header">
+          <div class="section-label">News</div>
+          <div class="section-title">최근 소식</div>
+        </div>
+        <div class="card" id="homeNews">
+          <div style="padding:1rem 1.1rem"><div class="skel skel-text" style="width:80%"></div><div class="skel skel-text-sm" style="width:60%;margin-top:8px"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ② 미디어 -->
+    <div class="tab-page" id="page-media">
+      <div class="page-section">
+        <div class="segment" id="mediaSegment">
+          <button class="seg-btn active" data-seg="podcast" onclick="switchSeg('media','podcast',this)">🎙️ 팟캐스트</button>
+          <button class="seg-btn" data-seg="lecture" onclick="switchSeg('media','lecture',this)">🎬 강의 영상</button>
+        </div>
+        <div id="mediaList"></div>
+      </div>
+    </div>
+
+    <!-- ③ 묵상 -->
+    <div class="tab-page" id="page-devotion">
+      <div class="page-section">
+        <div class="segment" id="devotSegment">
+          <button class="seg-btn active" data-seg="devotion" onclick="switchSeg('devot','devotion',this)">📖 묵상 노트</button>
+          <button class="seg-btn" data-seg="prayer" onclick="switchSeg('devot','prayer',this)">🙏 기도문</button>
+        </div>
+        <div id="devotList"></div>
+      </div>
+    </div>
+
+    <!-- ④ 몰 -->
+    <div class="tab-page" id="page-mall">
+      <div class="mall-banner">
+        <div class="mall-banner-icon">📚</div>
+        <div>
+          <div class="mall-banner-title">마더와이즈 교재</div>
+          <div class="mall-banner-desc">지혜·자유·회복·동행<br />4가지 세미나 공식 교재</div>
+        </div>
+      </div>
+      <div class="book-grid">
+        <div class="book-card"><div class="book-card-icon">🌿</div><div class="book-card-title">지혜</div><div class="book-card-sub">Wisdom</div></div>
+        <div class="book-card"><div class="book-card-icon">🕊️</div><div class="book-card-title">자유</div><div class="book-card-sub">Freedom</div></div>
+        <div class="book-card"><div class="book-card-icon">💛</div><div class="book-card-title">회복</div><div class="book-card-sub">Restoration</div></div>
+        <div class="book-card"><div class="book-card-icon">🤝</div><div class="book-card-title">동행</div><div class="book-card-sub">Together</div></div>
+      </div>
+      <!-- 🔗 여유몰 URL을 href에 입력하세요 -->
+      <div class="mall-cta">
+        <a href="YEOYUMOL_URL_HERE" target="_blank" class="btn btn-primary btn-block">🛍️ 여유몰에서 교재 구매하기</a>
+      </div>
+      <div class="coming-soon">
+        <div class="coming-soon-icon">🔔</div>
+        <div class="coming-soon-text">앱 내 직접 구매 기능을<br />준비 중입니다</div>
+      </div>
+    </div>
+
+    <!-- ⑤ 더보기 -->
+    <div class="tab-page" id="page-more">
+      <div class="more-profile">
+        <div class="more-profile-icon">🌿</div>
+        <div>
+          <div class="more-profile-title">마더와이즈</div>
+          <div class="more-profile-desc">어머니를 위한 사역 세미나<br />지혜 · 자유 · 회복 · 동행</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin:1.2rem;border-radius:16px;overflow:hidden;">
+        <a class="more-menu-item" onclick="showMorePage('seminar')">
+          <div class="more-menu-icon">📋</div>
+          <div class="more-menu-text"><div class="more-menu-label">세미나 소개</div><div class="more-menu-desc">4가지 사역 세미나 안내</div></div>
+          <span class="more-menu-arrow">›</span>
+        </a>
+        <a class="more-menu-item" onclick="showMorePage('about')">
+          <div class="more-menu-icon">🏠</div>
+          <div class="more-menu-text"><div class="more-menu-label">단체 소개</div><div class="more-menu-desc">마더와이즈 소개 및 연혁</div></div>
+          <span class="more-menu-arrow">›</span>
+        </a>
+        <a class="more-menu-item" onclick="showMorePage('regional')">
+          <div class="more-menu-icon">📍</div>
+          <div class="more-menu-text"><div class="more-menu-label">지역교회 마더와이즈</div><div class="more-menu-desc">전국 지역교회 현황</div></div>
+          <span class="more-menu-arrow">›</span>
+        </a>
+        <!-- 🔗 카페 URL을 href에 입력하세요 -->
+        <a class="more-menu-item" href="CAFE_URL_HERE" target="_blank">
+          <div class="more-menu-icon">☕</div>
+          <div class="more-menu-text"><div class="more-menu-label">사역자 온라인 카페</div><div class="more-menu-desc">사역자 전용 나눔 공간</div></div>
+          <span class="more-menu-arrow">›</span>
+        </a>
+      </div>
+
+      <div class="card" style="margin:0 1.2rem 1.2rem;border-radius:16px;overflow:hidden;">
+        <!-- 🔗 유관기관 URL을 href에 입력하세요 -->
+        <a class="more-menu-item" href="WONCHUN_URL_HERE" target="_blank">
+          <div class="more-menu-icon">⛪</div>
+          <div class="more-menu-text"><div class="more-menu-label">원천침례교회</div><div class="more-menu-desc">유관기관</div></div>
+          <span class="more-menu-arrow">›</span>
+        </a>
+        <a class="more-menu-item" href="https://www.suwoncca.org" target="_blank">
+          <div class="more-menu-icon">🏫</div>
+          <div class="more-menu-text"><div class="more-menu-label">중앙기독학교</div><div class="more-menu-desc">유관기관</div></div>
+          <span class="more-menu-arrow">›</span>
+        </a>
+      </div>
+
+      <!-- More sub-pages -->
+      <div id="moreSubPage" style="display:none; position:fixed; inset:0; background:var(--cream); z-index:30; overflow-y:auto; padding-bottom:2rem;">
+        <div style="display:flex;align-items:center;gap:.7rem;padding:calc(var(--safe-top)+12px) 1.2rem 1rem;background:rgba(253,246,238,.96);backdrop-filter:blur(14px);border-bottom:1px solid rgba(210,150,120,.14);position:sticky;top:0;z-index:1;">
+          <button onclick="hideMorePage()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--brown);">‹</button>
+          <span style="font-size:1rem;font-weight:700;color:var(--brown);" id="moreSubTitle"></span>
+        </div>
+        <div id="moreSubContent" style="padding:1.2rem;"></div>
+      </div>
+    </div>
+
+  </div><!-- .tab-content -->
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-tab="home" onclick="switchTab('home',this)">
+      <span class="nav-icon">🏠</span><span>홈</span>
+    </button>
+    <button class="nav-item" data-tab="media" onclick="switchTab('media',this)">
+      <span class="nav-icon">▶️</span><span>미디어</span>
+    </button>
+    <button class="nav-item" data-tab="devotion" onclick="switchTab('devotion',this)">
+      <span class="nav-icon">📖</span><span>묵상</span>
+    </button>
+    <button class="nav-item" data-tab="mall" onclick="switchTab('mall',this)">
+      <span class="nav-icon">🛍️</span><span>몰</span>
+    </button>
+    <button class="nav-item" data-tab="more" onclick="switchTab('more',this)">
+      <span class="nav-icon">☰</span><span>더보기</span>
+    </button>
+  </nav>
+
+</div><!-- .app -->
+
+<!-- Bottom Sheet -->
+<div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <span class="sheet-cat" id="sheetCat"></span>
+    <div class="sheet-title" id="sheetTitle"></div>
+    <div class="sheet-date" id="sheetDate"></div>
+  </div>
+  <div class="sheet-body">
+    <div class="sheet-scripture" id="sheetScripture" style="display:none;"></div>
+    <div id="sheetContent"></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getFirestore, collection, getDocs, onSnapshot, query, orderBy, where }
+  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyD-uNiAqgp54pREVGjZFL-cdXfBrhK8trU",
+  authDomain:        "motherwisekr.firebaseapp.com",
+  projectId:         "motherwisekr",
+  storageBucket:     "motherwisekr.firebasestorage.app",
+  messagingSenderId: "115848932002",
+  appId:             "1:115848932002:web:81966ecead06baaf0c45fb"
+};
+
+let db;
+try { db = getFirestore(initializeApp(firebaseConfig)); } catch {}
+
+// ── State ──
+let state = {
+  mediaSeg: 'podcast',
+  devotSeg: 'devotion',
+  mediaItems: [],
+  devotItems: [],
+};
+
+// ── Tab navigation ──
+window.switchTab = function(tab, el) {
+  document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + tab).classList.add('active');
+  if (el) el.classList.add('active');
+};
+
+// ── Segment control ──
+window.switchSeg = function(type, seg, el) {
+  const wrap = el.closest('.segment');
+  wrap.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  if (type === 'media') { state.mediaSeg = seg; renderMedia(); }
+  if (type === 'devot') { state.devotSeg = seg; renderDevot(); }
+};
+
+// ── Sheet ──
+window.openSheet = function(data) {
+  document.getElementById('sheetCat').textContent     = data.cat || '';
+  document.getElementById('sheetTitle').textContent   = data.title || '';
+  document.getElementById('sheetDate').textContent    = data.date || '';
+  const scrEl = document.getElementById('sheetScripture');
+  if (data.scripture) { scrEl.textContent = data.scripture; scrEl.style.display = 'block'; }
+  else scrEl.style.display = 'none';
+  document.getElementById('sheetContent').textContent = data.content || data.excerpt || '';
+  document.getElementById('sheet').classList.add('open');
+  document.getElementById('sheetOverlay').classList.add('open');
+};
+window.closeSheet = function() {
+  document.getElementById('sheet').classList.remove('open');
+  document.getElementById('sheetOverlay').classList.remove('open');
+};
+
+// ── HOME ──
+async function loadHome() {
+  loadSeminars();
+  loadNews();
+}
+
+const DEFAULT_SEMINARS = [
+  { id:'wisdom',      order:0, icon:'🌿', module:'세미나 1', name:'지혜 (Wisdom)',      desc:'하나님의 말씀 위에서 지혜로운 어머니로 서는 법을 배웁니다.', open:true,  formUrl:'' },
+  { id:'freedom',     order:1, icon:'🕊️', module:'세미나 2', name:'자유 (Freedom)',     desc:'말씀 안에서 진정한 자유를 경험하는 과정입니다.',             open:true,  formUrl:'' },
+  { id:'restoration', order:2, icon:'💛', module:'세미나 3', name:'회복 (Restoration)', desc:'하나님의 은혜로 회복되는 여정을 함께 걷습니다.',             open:false, formUrl:'' },
+  { id:'together',    order:3, icon:'🤝', module:'세미나 4', name:'동행 (Together)',    desc:'어머니들이 공동체로 세워져 가는 핵심 과정입니다.',           open:false, formUrl:'' },
+];
+
+async function loadSeminars() {
+  let items = DEFAULT_SEMINARS;
+  if (db) {
+    try {
+      const s = await getDocs(query(collection(db, 'mw_seminars'), orderBy('order')));
+      if (!s.empty) items = s.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch {}
+  }
+  document.getElementById('homeSeminars').innerHTML = items.map(s => `
+    <div class="card" style="${items.indexOf(s) > 0 ? 'margin-top:.9rem' : ''}">
+      <div class="seminar-card">
+        <div class="seminar-card-top">
+          <div>
+            <div class="seminar-module">${s.module}</div>
+            <div class="seminar-name">${s.icon} ${s.name}</div>
+          </div>
+          <span class="pill ${s.open ? 'pill-green' : 'pill-brown'}">${s.open ? '신청 가능' : '마감'}</span>
+        </div>
+        <div class="seminar-desc">${s.desc}</div>
+        ${s.schedule ? `<div class="seminar-meta">📅 ${s.schedule}</div>` : ''}
+        <div class="seminar-actions">
+          ${s.open && s.formUrl ? `<a href="${s.formUrl}" target="_blank" class="btn btn-primary btn-sm">신청하기</a>` : `<button class="btn btn-outline btn-sm" disabled style="opacity:.5">신청 마감</button>`}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function loadNews() {
+  if (!db) { renderDefaultNews(); return; }
+  try {
+    const q = query(collection(db, 'mw_news'), where('published','!=',false), orderBy('published'), orderBy('createdAt','desc'));
+    onSnapshot(q, snap => {
+      const items = snap.docs.map(d => ({ id: d.id, ...d.data() })).slice(0, 5);
+      items.length ? renderNews(items) : renderDefaultNews();
+    }, renderDefaultNews);
+  } catch { renderDefaultNews(); }
+}
+
+function renderNews(items) {
+  document.getElementById('homeNews').innerHTML = items.map(item => `
+    <div class="news-item" onclick='openSheet(${JSON.stringify({cat:item.category,title:item.title,date:item.date,content:item.content||item.excerpt})})'>
+      <div class="news-item-top">
+        <span class="pill pill-rose">${item.category||'공지'}</span>
+        <span class="news-item-date">${item.date||''}</span>
+      </div>
+      <div class="news-item-title">${item.title}</div>
+      <div class="news-item-excerpt">${item.excerpt||''}</div>
+    </div>
+  `).join('');
+}
+
+function renderDefaultNews() {
+  document.getElementById('homeNews').innerHTML = `
+    <div class="news-item"><div class="news-item-top"><span class="pill pill-rose">세미나</span><span class="news-item-date">2025. 03. 10</span></div><div class="news-item-title">2025년 봄학기 세미나 일정 안내</div><div class="news-item-excerpt">봄학기 지혜·자유 세미나 참가자를 모집합니다.</div></div>
+    <div class="news-item"><div class="news-item-top"><span class="pill pill-rose">공지</span><span class="news-item-date">2025. 02. 15</span></div><div class="news-item-title">교재 개정판 출시 안내</div><div class="news-item-excerpt">지혜 교재 개정판이 여유몰에서 구매 가능합니다.</div></div>
+  `;
+}
+
+// ── MEDIA ──
+function loadMedia() {
+  if (!db) { state.mediaItems = []; renderMedia(); return; }
+  const q = query(collection(db, 'mw_media'), orderBy('createdAt', 'desc'));
+  onSnapshot(q, snap => {
+    state.mediaItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderMedia();
+  }, () => { state.mediaItems = []; renderMedia(); });
+}
+
+function renderMedia() {
+  const items = state.mediaItems.filter(i => i.type === state.mediaSeg);
+  const el = document.getElementById('mediaList');
+  if (!items.length) {
+    el.innerHTML = `<div class="media-empty"><div class="e-icon">${state.mediaSeg === 'podcast' ? '🎙️' : '🎬'}</div><p>${state.mediaSeg === 'podcast' ? '등록된 팟캐스트가 없습니다.' : '등록된 강의 영상이 없습니다.'}<br/>관리자 페이지에서 추가해 주세요.</p></div>`;
+    return;
+  }
+  el.innerHTML = items.map(item => {
+    const ytId = item.youtubeId || '';
+    const thumb = ytId ? `https://img.youtube.com/vi/${ytId}/mqdefault.jpg` : '';
+    const ytUrl = ytId ? `https://www.youtube.com/watch?v=${ytId}` : '#';
+    return `
+      <div class="card" style="margin-bottom:.9rem;">
+        <div class="media-card">
+          <div class="media-thumb" onclick="window.open('${ytUrl}','_blank')">
+            ${thumb ? `<img src="${thumb}" alt="" loading="lazy"/>` : (state.mediaSeg === 'podcast' ? '🎙️' : '🎬')}
+            ${ytId ? '<div class="media-thumb-play">▶</div>' : ''}
+          </div>
+          <div class="media-info">
+            <div class="media-title" onclick="window.open('${ytUrl}','_blank')">${item.title}</div>
+            <div class="media-meta">${item.date || ''}</div>
+            ${item.desc ? `<div class="media-desc">${item.desc}</div>` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── DEVOTION ──
+function loadDevot() {
+  if (!db) { state.devotItems = []; renderDevot(); return; }
+  const q = query(collection(db, 'mw_devotionals'), orderBy('createdAt', 'desc'));
+  onSnapshot(q, snap => {
+    state.devotItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderDevot();
+  }, () => { state.devotItems = []; renderDevot(); });
+}
+
+function renderDevot() {
+  const items = state.devotItems.filter(i => i.type === state.devotSeg);
+  const el = document.getElementById('devotList');
+  if (!items.length) {
+    el.innerHTML = `<div class="media-empty"><div class="e-icon">${state.devotSeg === 'devotion' ? '📖' : '🙏'}</div><p>${state.devotSeg === 'devotion' ? '등록된 묵상 노트가 없습니다.' : '등록된 기도문이 없습니다.'}<br/>관리자 페이지에서 추가해 주세요.</p></div>`;
+    return;
+  }
+  el.innerHTML = items.map(item => `
+    <div class="card devot-card" style="margin-bottom:.8rem;">
+      <span class="pill pill-rose">${item.type === 'devotion' ? '묵상' : '기도문'}</span>
+      <div class="devot-title">${item.title}</div>
+      ${item.scripture ? `<div class="devot-scripture">${item.scripture}</div>` : ''}
+      <div class="devot-preview">${(item.content||'').slice(0, 80)}${item.content?.length > 80 ? '...' : ''}</div>
+      <div class="devot-footer">
+        <span class="devot-date">${item.date||''}</span>
+        <span class="devot-read" onclick='openSheet(${JSON.stringify({cat:item.type==="devotion"?"묵상 노트":"기도문",title:item.title,date:item.date,scripture:item.scripture,content:item.content})})'>전체 읽기 →</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── MORE sub-pages ──
+window.showMorePage = async function(type) {
+  const sub = document.getElementById('moreSubPage');
+  const content = document.getElementById('moreSubContent');
+  const titles = { seminar:'세미나 소개', about:'단체 소개', regional:'지역교회 마더와이즈' };
+  document.getElementById('moreSubTitle').textContent = titles[type] || '';
+
+  if (type === 'seminar') {
+    let items = DEFAULT_SEMINARS;
+    if (db) { try { const s = await getDocs(query(collection(db,'mw_seminars'),orderBy('order'))); if (!s.empty) items = s.docs.map(d=>({id:d.id,...d.data()})); } catch {} }
+    content.innerHTML = items.map(s => `
+      <div class="card" style="margin-bottom:.9rem;padding:1.2rem;">
+        <div style="font-size:.7rem;font-weight:700;color:var(--rose);letter-spacing:.08em;">${s.module}</div>
+        <div style="font-size:1.1rem;font-weight:700;color:var(--brown);margin:.3rem 0;">${s.icon} ${s.name}</div>
+        <div style="font-size:.84rem;color:var(--text-light);line-height:1.65;word-break:keep-all;">${s.desc}</div>
+        ${s.schedule ? `<div style="font-size:.76rem;color:var(--text-light);margin-top:.6rem;">📅 ${s.schedule}</div>` : ''}
+        <span class="pill ${s.open?'pill-green':'pill-brown'}" style="margin-top:.7rem;">${s.open?'✅ 신청 가능':'🔒 마감'}</span>
+      </div>
+    `).join('');
+  } else if (type === 'about') {
+    let d = {};
+    if (db) { try { const s = await getDocs(collection(db,'mw_about')); if (!s.empty) d = s.docs[0].data(); } catch {} }
+    content.innerHTML = `
+      <div style="font-size:.92rem;color:var(--text-mid);line-height:1.85;word-break:keep-all;margin-bottom:1.2rem;">${d.aboutDesc1||'마더와이즈(Motherwise)는 원천침례교회에서 시작된 어머니 사역으로, 성경적 가치관 위에서 자녀를 양육하고 건강한 가정을 세울 수 있도록 교육과 공동체를 지원합니다.'}</div>
+      <div style="font-size:.92rem;color:var(--text-mid);line-height:1.85;word-break:keep-all;">${d.aboutDesc2||'지혜·자유·회복·동행 네 가지 주제의 세미나와 교재를 통해 어머니들이 서로 배우고 격려하며 성장하는 공동체를 세워갑니다.'}</div>
+    `;
+  } else if (type === 'regional') {
+    let items = [];
+    if (db) { try { const s = await getDocs(collection(db,'mw_regionals')); items = s.docs.map(d=>({id:d.id,...d.data()})); } catch {} }
+    content.innerHTML = items.length
+      ? items.map(r => `<div class="card" style="margin-bottom:.8rem;padding:1rem 1.2rem;"><div style="font-weight:700;color:var(--brown);">📍 ${r.region}</div><div style="font-size:.84rem;color:var(--text-light);margin-top:.2rem;">${r.church}</div><span class="pill ${r.active?'pill-green':'pill-brown'}" style="margin-top:.5rem;">${r.active?'운영 중':'준비 중'}</span></div>`).join('')
+      : '<div class="media-empty"><div class="e-icon">📍</div><p>등록된 지역교회가 없습니다.</p></div>';
+  }
+
+  sub.style.display = 'block';
+  requestAnimationFrame(() => sub.style.opacity = '1');
+};
+
+window.hideMorePage = function() {
+  document.getElementById('moreSubPage').style.display = 'none';
+};
+
+// ── PWA Install ──
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); deferredPrompt = e;
+  document.getElementById('installBtn').classList.add('show');
+});
+document.getElementById('installBtn').addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === 'accepted') document.getElementById('installBtn').classList.remove('show');
+  deferredPrompt = null;
+});
+
+// ── Service Worker ──
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+// ── Init ──
+loadHome();
+loadMedia();
+loadDevot();
+</script>
+</body>
+</html>

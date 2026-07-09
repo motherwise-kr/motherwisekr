@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>마더와이즈 관리자</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --cream:#fdf6ee; --beige:#f5e6d3; --blush:#f2c4b0;
+      --rose:#d97b6c; --rose-dark:#b85c4e; --brown:#7a4a3a;
+      --text:#3d2b1f; --text-mid:#6b4c3b; --text-light:#a07060;
+      --white:#ffffff; --sidebar:#2d1a12;
+      --success:#4caf7d; --danger:#e05c4b; --warning:#f0a050;
+    }
+    body { font-family: 'Noto Sans KR', sans-serif; background: #f8f2ec; color: var(--text); min-height: 100vh; }
+
+    /* Login */
+    #loginScreen { min-height:100vh; display:flex; align-items:center; justify-content:center; background:linear-gradient(145deg,var(--cream),var(--beige)); }
+    .login-box { background:var(--white); border-radius:20px; padding:3rem 2.5rem; text-align:center; box-shadow:0 8px 40px rgba(120,70,50,.15); max-width:380px; width:90%; }
+    .login-logo { font-size:3rem; margin-bottom:1rem; }
+    .login-title { font-size:1.4rem; font-weight:700; color:var(--brown); margin-bottom:.4rem; }
+    .login-sub { font-size:.88rem; color:var(--text-light); margin-bottom:2rem; }
+    .btn-google { width:100%; padding:.9rem; border-radius:50px; background:var(--rose); color:white; border:none; font-family:inherit; font-size:1rem; font-weight:600; cursor:pointer; transition:background .2s; display:flex; align-items:center; justify-content:center; gap:8px; }
+    .btn-google:hover { background:var(--rose-dark); }
+    .login-notice { font-size:.78rem; color:var(--text-light); margin-top:1.2rem; }
+
+    /* Layout */
+    #adminApp { display:none; }
+    .admin-layout { display:flex; min-height:100vh; }
+    .sidebar { width:240px; background:var(--sidebar); color:rgba(255,255,255,.85); display:flex; flex-direction:column; position:fixed; top:0; left:0; bottom:0; z-index:10; }
+    .sidebar-brand { padding:1.5rem 1.4rem; border-bottom:1px solid rgba(255,255,255,.08); }
+    .sidebar-brand-name { font-size:1rem; font-weight:700; color:white; }
+    .sidebar-brand-sub { font-size:.7rem; color:rgba(255,255,255,.4); margin-top:2px; letter-spacing:.05em; }
+    .sidebar-nav { flex:1; padding:1rem 0; overflow-y:auto; }
+    .sidebar-section-label { font-size:.66rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:rgba(255,255,255,.3); padding:.8rem 1.4rem .35rem; }
+    .sidebar-item { display:flex; align-items:center; gap:10px; padding:.65rem 1.4rem; cursor:pointer; font-size:.88rem; transition:background .15s; border-radius:8px; margin:1px 8px; text-decoration:none; color:rgba(255,255,255,.75); }
+    .sidebar-item:hover { background:rgba(255,255,255,.07); color:white; }
+    .sidebar-item.active { background:var(--rose); color:white; }
+    .sidebar-item .icon { font-size:.95rem; width:20px; text-align:center; }
+    .sidebar-badge { margin-left:auto; background:var(--rose); color:white; font-size:.68rem; font-weight:700; padding:1px 7px; border-radius:50px; }
+    .sidebar-item.active .sidebar-badge { background:rgba(255,255,255,.3); }
+    .sidebar-footer { padding:1rem; border-top:1px solid rgba(255,255,255,.08); }
+    .sidebar-user { display:flex; align-items:center; gap:10px; padding:.5rem; }
+    .sidebar-avatar { width:34px; height:34px; border-radius:50%; background:var(--rose); display:flex; align-items:center; justify-content:center; font-size:.9rem; font-weight:700; color:white; flex-shrink:0; }
+    .sidebar-user-name { font-size:.8rem; color:rgba(255,255,255,.8); font-weight:500; }
+    .sidebar-user-email { font-size:.7rem; color:rgba(255,255,255,.4); }
+    .btn-logout { width:100%; padding:.5rem; margin-top:.5rem; background:rgba(255,255,255,.06); color:rgba(255,255,255,.6); border:1px solid rgba(255,255,255,.1); border-radius:8px; font-family:inherit; font-size:.8rem; cursor:pointer; transition:all .2s; }
+    .btn-logout:hover { background:rgba(255,255,255,.12); color:white; }
+
+    /* Main */
+    .admin-main { flex:1; margin-left:240px; display:flex; flex-direction:column; min-height:100vh; }
+    .admin-topbar { background:white; padding:1rem 2rem; border-bottom:1px solid rgba(160,112,96,.12); display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:5; }
+    .topbar-title { font-size:1.1rem; font-weight:700; color:var(--brown); }
+    .admin-content { flex:1; padding:1.8rem; }
+    .tab-panel { display:none; }
+    .tab-panel.active { display:block; }
+
+    /* Buttons */
+    .btn { display:inline-flex; align-items:center; gap:5px; padding:.55rem 1.1rem; border-radius:8px; font-family:inherit; font-size:.86rem; font-weight:600; cursor:pointer; border:none; transition:all .2s; }
+    .btn-primary { background:var(--rose); color:white; }
+    .btn-primary:hover { background:var(--rose-dark); }
+    .btn-secondary { background:var(--beige); color:var(--brown); }
+    .btn-secondary:hover { background:var(--blush); }
+    .btn-danger { background:#fee; color:var(--danger); border:1px solid #fcc; }
+    .btn-danger:hover { background:var(--danger); color:white; }
+    .btn-sm { padding:.32rem .75rem; font-size:.78rem; }
+
+    /* Cards */
+    .card { background:white; border-radius:14px; padding:1.4rem; box-shadow:0 2px 12px rgba(120,70,50,.07); margin-bottom:1.2rem; }
+    .card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.2rem; flex-wrap:wrap; gap:.7rem; }
+    .card-title { font-size:1rem; font-weight:700; color:var(--brown); }
+
+    /* Forms */
+    .form-group { margin-bottom:1rem; }
+    label { display:block; font-size:.78rem; font-weight:600; color:var(--text-mid); margin-bottom:.32rem; }
+    input[type=text], input[type=email], input[type=url], input[type=number],
+    textarea, select {
+      width:100%; padding:.62rem .88rem; border:1.5px solid rgba(180,130,110,.25); border-radius:9px;
+      background:var(--cream); color:var(--text); font-family:inherit; font-size:.88rem;
+      transition:border-color .2s; outline:none;
+    }
+    input:focus, textarea:focus, select:focus { border-color:var(--rose); box-shadow:0 0 0 3px rgba(217,123,108,.1); }
+    textarea { resize:vertical; min-height:80px; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    .form-row-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; }
+    .form-hint { font-size:.73rem; color:var(--text-light); margin-top:.28rem; }
+
+    /* List items */
+    .list-item { display:flex; align-items:flex-start; gap:1rem; padding:1rem; border:1.5px solid rgba(200,160,140,.15); border-radius:10px; margin-bottom:.65rem; transition:border-color .2s; }
+    .list-item:hover { border-color:var(--blush); }
+    .list-item-info { flex:1; min-width:0; }
+    .list-item-tag { font-size:.68rem; font-weight:700; color:var(--rose); background:rgba(217,123,108,.1); padding:.15rem .55rem; border-radius:50px; display:inline-block; margin-bottom:.35rem; }
+    .list-item-title { font-size:.92rem; font-weight:700; color:var(--brown); word-break:keep-all; }
+    .list-item-meta { font-size:.76rem; color:var(--text-light); margin-top:.2rem; }
+    .list-item-actions { display:flex; gap:.45rem; flex-shrink:0; align-items:center; }
+
+    /* Stats */
+    .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1rem; margin-bottom:1.8rem; }
+    .stat-card { background:white; border-radius:12px; padding:1.1rem; box-shadow:0 2px 12px rgba(120,70,50,.07); text-align:center; }
+    .stat-icon { font-size:1.6rem; margin-bottom:.4rem; }
+    .stat-number { font-size:1.7rem; font-weight:700; color:var(--rose-dark); }
+    .stat-label { font-size:.75rem; color:var(--text-light); margin-top:.15rem; }
+
+    /* Messages */
+    .msg-item { padding:1rem; border:1.5px solid rgba(200,160,140,.15); border-radius:10px; margin-bottom:.65rem; cursor:pointer; }
+    .msg-item.unread { border-color:var(--blush); background:rgba(242,196,176,.04); }
+    .msg-header { display:flex; align-items:center; gap:.65rem; flex-wrap:wrap; margin-bottom:.45rem; }
+    .msg-name { font-weight:700; color:var(--brown); font-size:.92rem; }
+    .msg-tag { font-size:.68rem; font-weight:700; background:rgba(217,123,108,.1); color:var(--rose); padding:.15rem .55rem; border-radius:50px; }
+    .msg-date { font-size:.75rem; color:var(--text-light); margin-left:auto; }
+    .msg-body { font-size:.85rem; color:var(--text-mid); line-height:1.65; word-break:keep-all; }
+    .msg-contact { font-size:.78rem; color:var(--text-light); margin-top:.4rem; }
+
+    /* Toast */
+    .toast { position:fixed; bottom:2rem; right:2rem; z-index:999; background:var(--brown); color:white; padding:.75rem 1.3rem; border-radius:10px; font-size:.88rem; font-weight:500; box-shadow:0 8px 24px rgba(0,0,0,.2); transform:translateY(20px); opacity:0; transition:all .3s; pointer-events:none; }
+    .toast.show { transform:translateY(0); opacity:1; }
+    .toast.success { background:var(--success); }
+    .toast.error { background:var(--danger); }
+
+    /* Modal */
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.4); display:flex; align-items:center; justify-content:center; z-index:50; padding:1rem; opacity:0; pointer-events:none; transition:opacity .25s; }
+    .modal-overlay.open { opacity:1; pointer-events:all; }
+    .modal { background:white; border-radius:16px; padding:2rem; width:100%; max-width:540px; max-height:90vh; overflow-y:auto; transform:scale(.96); transition:transform .25s; }
+    .modal-overlay.open .modal { transform:scale(1); }
+    .modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.4rem; }
+    .modal-title-text { font-size:1.08rem; font-weight:700; color:var(--brown); }
+    .modal-close { background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text-light); line-height:1; }
+    .modal-footer { display:flex; gap:.65rem; justify-content:flex-end; margin-top:1.4rem; padding-top:1.1rem; border-top:1px solid rgba(160,112,96,.12); }
+
+    /* Toggle */
+    .toggle-wrap { display:flex; align-items:center; gap:.7rem; }
+    .toggle { position:relative; width:44px; height:24px; }
+    .toggle input { opacity:0; width:0; height:0; }
+    .toggle-slider { position:absolute; inset:0; background:#ddd; border-radius:24px; cursor:pointer; transition:.3s; }
+    .toggle-slider::before { content:''; position:absolute; width:18px; height:18px; left:3px; bottom:3px; background:white; border-radius:50%; transition:.3s; }
+    .toggle input:checked + .toggle-slider { background:var(--rose); }
+    .toggle input:checked + .toggle-slider::before { transform:translateX(20px); }
+    .toggle-label { font-size:.85rem; color:var(--text-mid); }
+
+    /* Seminar edit */
+    .seminar-edit-item { padding:1.2rem; border:1.5px solid rgba(200,160,140,.18); border-radius:12px; margin-bottom:1rem; }
+    .seminar-edit-header { display:flex; align-items:center; gap:.8rem; margin-bottom:.8rem; cursor:pointer; user-select:none; }
+    .seminar-edit-icon { font-size:1.4rem; }
+    .seminar-edit-name { font-weight:700; color:var(--brown); flex:1; }
+    .seminar-edit-toggle { color:var(--text-light); font-size:.85rem; transition:transform .2s; }
+    .seminar-edit-body { display:none; }
+    .seminar-edit-body.open { display:block; }
+
+    /* Empty */
+    .empty-state { text-align:center; padding:2.5rem; color:var(--text-light); }
+    .empty-icon { font-size:2.5rem; margin-bottom:.6rem; }
+    .loading { text-align:center; padding:2.5rem; color:var(--text-light); }
+    .spin { width:32px; height:32px; border:3px solid var(--beige); border-top-color:var(--rose); border-radius:50%; animation:spin .8s linear infinite; margin:0 auto .8rem; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    @media (max-width:768px) {
+      .sidebar { transform:translateX(-100%); transition:transform .3s; }
+      .sidebar.open { transform:translateX(0); }
+      .admin-main { margin-left:0; }
+      .form-row, .form-row-3 { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">🌿</div>
+    <div class="login-title">마더와이즈 관리자</div>
+    <div class="login-sub">구글 계정 또는 관리자 PIN으로 로그인하세요</div>
+    <button class="btn-google" id="loginBtn">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="white" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="rgba(255,255,255,.8)" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="rgba(255,255,255,.6)" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="rgba(255,255,255,.7)" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      구글 계정으로 로그인
+    </button>
+    <div style="display:flex;align-items:center;gap:.7rem;margin:1rem 0;">
+      <div style="flex:1;height:1px;background:rgba(160,112,96,.15);"></div>
+      <span style="font-size:.75rem;color:var(--text-light);">또는</span>
+      <div style="flex:1;height:1px;background:rgba(160,112,96,.15);"></div>
+    </div>
+    <div style="display:flex;gap:.5rem;">
+      <input type="password" id="pinInput" placeholder="관리자 PIN 입력" maxlength="10"
+        style="flex:1;padding:.75rem 1rem;border:1.5px solid rgba(180,130,110,.25);border-radius:10px;background:var(--cream);font-family:inherit;font-size:.95rem;outline:none;letter-spacing:.15em;"
+        onkeydown="if(event.key==='Enter')loginWithPin()" />
+      <button onclick="loginWithPin()" style="padding:.75rem 1.1rem;border-radius:10px;background:var(--brown);color:white;border:none;font-family:inherit;font-size:.88rem;font-weight:600;cursor:pointer;">입력</button>
+    </div>
+    <p id="pinError" style="font-size:.78rem;color:var(--danger);margin-top:.5rem;display:none;">PIN이 올바르지 않습니다.</p>
+    <p class="login-notice">※ 승인된 관리자 계정만 접근 가능합니다</p>
+  </div>
+</div>
+
+<!-- Admin App -->
+<div id="adminApp">
+  <div class="admin-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-brand-name">🌿 마더와이즈</div>
+        <div class="sidebar-brand-sub">ADMIN PANEL</div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="sidebar-section-label">메인 관리</div>
+        <a class="sidebar-item active" data-tab="dashboard"><span class="icon">📊</span> 대시보드</a>
+        <a class="sidebar-item" data-tab="seminars"><span class="icon">📋</span> 세미나 관리</a>
+        <a class="sidebar-item" data-tab="news"><span class="icon">📰</span> 소식 / 공지<span class="sidebar-badge" id="newsBadge">-</span></a>
+        <div class="sidebar-section-label">사이트 정보</div>
+        <a class="sidebar-item" data-tab="books"><span class="icon">📚</span> 교재 안내</a>
+        <a class="sidebar-item" data-tab="about"><span class="icon">🏠</span> 단체 소개</a>
+        <a class="sidebar-item" data-tab="regional"><span class="icon">📍</span> 지역교회</a>
+        <div class="sidebar-section-label">운영</div>
+        <a class="sidebar-item" data-tab="messages"><span class="icon">✉️</span> 문의 메시지<span class="sidebar-badge" id="msgBadge">-</span></a>
+        <div class="sidebar-section-label">콘텐츠</div>
+        <a class="sidebar-item" data-tab="media"><span class="icon">🎬</span> 미디어 관리</a>
+        <a class="sidebar-item" data-tab="devotional"><span class="icon">📖</span> 묵상 관리</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div class="sidebar-avatar" id="userAvatar">?</div>
+          <div>
+            <div class="sidebar-user-name" id="userName">-</div>
+            <div class="sidebar-user-email" id="userEmail">-</div>
+          </div>
+        </div>
+        <button class="btn-logout" id="logoutBtn">로그아웃</button>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <div class="admin-topbar">
+        <div class="topbar-title" id="topbarTitle">대시보드</div>
+        <a href="index.html" target="_blank" class="btn btn-secondary btn-sm">🌐 사이트 보기</a>
+      </div>
+      <div class="admin-content">
+
+        <!-- Dashboard -->
+        <div class="tab-panel active" id="panel-dashboard">
+          <div class="stats-grid">
+            <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-number" id="statSem">-</div><div class="stat-label">세미나</div></div>
+            <div class="stat-card"><div class="stat-icon">📰</div><div class="stat-number" id="statNews">-</div><div class="stat-label">소식 글</div></div>
+            <div class="stat-card"><div class="stat-icon">🎬</div><div class="stat-number" id="statMedia">-</div><div class="stat-label">미디어</div></div>
+            <div class="stat-card"><div class="stat-icon">📖</div><div class="stat-number" id="statDev">-</div><div class="stat-label">묵상</div></div>
+            <div class="stat-card"><div class="stat-icon">✉️</div><div class="stat-number" id="statMsg">-</div><div class="stat-label">미확인 문의</div></div>
+            <div class="stat-card"><div class="stat-icon">📍</div><div class="stat-number" id="statReg">-</div><div class="stat-label">지역교회</div></div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:1rem;">⚡ 빠른 작업</div>
+            <div style="display:flex;flex-wrap:wrap;gap:.7rem;">
+              <button class="btn btn-primary" onclick="switchTab('seminars')">📋 세미나 관리</button>
+              <button class="btn btn-primary" onclick="switchTab('news');openNewsModal()">+ 소식 작성</button>
+              <button class="btn btn-primary" onclick="switchTab('media');openMediaModal()">🎬 영상 추가</button>
+              <button class="btn btn-primary" onclick="switchTab('devotional');openDevotionalModal()">📖 묵상 추가</button>
+              <button class="btn btn-secondary" onclick="switchTab('messages')">📨 문의 확인</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:1rem;">📰 최근 소식</div>
+            <div id="dashNews"><div class="loading"><div class="spin"></div>불러오는 중...</div></div>
+          </div>
+        </div>
+
+        <!-- Seminars -->
+        <div class="tab-panel" id="panel-seminars">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">세미나 관리</div>
+              <button class="btn btn-primary" onclick="saveSeminars()">저장하기</button>
+            </div>
+            <p style="font-size:.84rem;color:var(--text-light);margin-bottom:1.4rem;">각 세미나의 설명, 일정, 구글폼 링크, 신청 가능 여부를 수정하세요.</p>
+            <div id="seminarEditList"></div>
+          </div>
+        </div>
+
+        <!-- News -->
+        <div class="tab-panel" id="panel-news">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">소식 / 공지 관리</div>
+              <button class="btn btn-primary" onclick="openNewsModal()">+ 새 글 작성</button>
+            </div>
+            <div id="newsList"><div class="loading"><div class="spin"></div>불러오는 중...</div></div>
+          </div>
+        </div>
+
+        <!-- Books -->
+        <div class="tab-panel" id="panel-books">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">교재 안내 수정</div>
+              <button class="btn btn-primary" onclick="saveBooks()">저장하기</button>
+            </div>
+            <div id="booksEditor"></div>
+          </div>
+        </div>
+
+        <!-- About -->
+        <div class="tab-panel" id="panel-about">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">단체 소개 수정</div>
+              <button class="btn btn-primary" onclick="saveAbout()">저장하기</button>
+            </div>
+            <div id="aboutEditor"></div>
+          </div>
+        </div>
+
+        <!-- Regional -->
+        <div class="tab-panel" id="panel-regional">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">지역교회 마더와이즈</div>
+              <button class="btn btn-primary" onclick="openRegionalModal()">+ 지역 추가</button>
+            </div>
+            <div id="regionalList"><div class="loading"><div class="spin"></div>불러오는 중...</div></div>
+          </div>
+        </div>
+
+        <!-- Media -->
+        <div class="tab-panel" id="panel-media">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">미디어 관리 (유튜브)</div>
+              <button class="btn btn-primary" onclick="openMediaModal()">+ 영상 추가</button>
+            </div>
+            <p style="font-size:.84rem;color:var(--text-light);margin-bottom:1.2rem;">팟캐스트와 강의영상을 유튜브 영상 ID로 등록합니다.</p>
+            <div id="mediaList"><div class="loading"><div class="spin"></div>불러오는 중...</div></div>
+          </div>
+        </div>
+
+        <!-- Devotional -->
+        <div class="tab-panel" id="panel-devotional">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">묵상 관리</div>
+              <button class="btn btn-primary" onclick="openDevotionalModal()">+ 묵상 추가</button>
+            </div>
+            <p style="font-size:.84rem;color:var(--text-light);margin-bottom:1.2rem;">묵상노트와 기도문을 등록합니다.</p>
+            <div id="devotionalList"><div class="loading"><div class="spin"></div>불러오는 중...</div></div>
+          </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="tab-panel" id="panel-messages">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">문의 메시지</div>
+              <button class="btn btn-secondary btn-sm" onclick="markAllRead()">모두 읽음</button>
+            </div>
+            <div id="msgList"><div class="loading"><div class="spin"></div>불러오는 중...</div></div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- News Modal -->
+<div class="modal-overlay" id="newsModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title-text" id="newsModalLabel">새 소식 작성</div>
+      <button class="modal-close" onclick="closeNewsModal()">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>카테고리</label>
+        <select id="nCat"><option>세미나</option><option>공지</option><option>후기</option><option>모집</option><option>일반</option></select></div>
+      <div class="form-group"><label>날짜</label><input type="text" id="nDate" placeholder="2025. 04. 01" /></div>
+    </div>
+    <div class="form-group"><label>제목 *</label><input type="text" id="nTitle" placeholder="소식 제목" /></div>
+    <div class="form-group"><label>요약 (목록에 표시)</label><textarea id="nExcerpt" style="min-height:60px;" placeholder="한두 문장 요약"></textarea></div>
+    <div class="form-group"><label>본문</label><textarea id="nContent" style="min-height:140px;" placeholder="자세한 내용"></textarea></div>
+    <div class="form-group">
+      <label>공개 여부</label>
+      <select id="nPublished"><option value="true">공개</option><option value="false">비공개 (임시저장)</option></select>
+    </div>
+    <input type="hidden" id="nDocId" />
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeNewsModal()">취소</button>
+      <button class="btn btn-primary" onclick="saveNews()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- Regional Modal -->
+<div class="modal-overlay" id="regionalModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title-text" id="regModalLabel">지역교회 추가</div>
+      <button class="modal-close" onclick="closeRegionalModal()">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>지역명 *</label><input type="text" id="regRegion" placeholder="예: 수원, 서울 강남" /></div>
+      <div class="form-group"><label>교회명 *</label><input type="text" id="regChurch" placeholder="예: ○○침례교회" /></div>
+    </div>
+    <div class="form-group">
+      <label>운영 상태</label>
+      <div class="toggle-wrap" style="margin-top:.4rem;">
+        <label class="toggle"><input type="checkbox" id="regActive" checked /><span class="toggle-slider"></span></label>
+        <span class="toggle-label">운영 중</span>
+      </div>
+    </div>
+    <input type="hidden" id="regDocId" />
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeRegionalModal()">취소</button>
+      <button class="btn btn-primary" onclick="saveRegional()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- Media Modal -->
+<div class="modal-overlay" id="mediaModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title-text" id="mediaModalLabel">영상 추가</div>
+      <button class="modal-close" onclick="closeMediaModal()">✕</button>
+    </div>
+    <div class="form-group">
+      <label>유형</label>
+      <select id="mType">
+        <option value="podcast">팟캐스트</option>
+        <option value="lecture">강의영상</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>제목 *</label>
+      <input type="text" id="mTitle" placeholder="영상 제목" />
+    </div>
+    <div class="form-group">
+      <label>유튜브 영상 ID *</label>
+      <input type="text" id="mYoutubeId" placeholder="예: dQw4w9WgXcQ" />
+      <p class="form-hint">유튜브 URL에서 v= 뒤의 문자열. 예) youtube.com/watch?v=<strong>dQw4w9WgXcQ</strong></p>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>날짜</label>
+        <input type="text" id="mDate" placeholder="2025. 04. 01" />
+      </div>
+      <div class="form-group">
+        <label>공개 여부</label>
+        <select id="mPublished"><option value="true">공개</option><option value="false">비공개</option></select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>설명 (선택)</label>
+      <textarea id="mDesc" style="min-height:80px;" placeholder="영상에 대한 간단한 설명"></textarea>
+    </div>
+    <input type="hidden" id="mDocId" />
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeMediaModal()">취소</button>
+      <button class="btn btn-primary" onclick="saveMedia()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- Devotional Modal -->
+<div class="modal-overlay" id="devotionalModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title-text" id="devModalLabel">묵상 추가</div>
+      <button class="modal-close" onclick="closeDevotionalModal()">✕</button>
+    </div>
+    <div class="form-group">
+      <label>유형</label>
+      <select id="dType">
+        <option value="devotion">묵상노트</option>
+        <option value="prayer">기도문</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>제목 *</label>
+      <input type="text" id="dTitle" placeholder="묵상 제목" />
+    </div>
+    <div class="form-group">
+      <label>성경 구절 (선택)</label>
+      <input type="text" id="dScripture" placeholder="예: 잠언 31:30" />
+    </div>
+    <div class="form-group">
+      <label>날짜</label>
+      <input type="text" id="dDate" placeholder="2025. 04. 01" />
+    </div>
+    <div class="form-group">
+      <label>본문 *</label>
+      <textarea id="dContent" style="min-height:160px;" placeholder="묵상 내용 또는 기도문을 입력하세요"></textarea>
+    </div>
+    <div class="form-group">
+      <label>공개 여부</label>
+      <select id="dPublished"><option value="true">공개</option><option value="false">비공개</option></select>
+    </div>
+    <input type="hidden" id="dDocId" />
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeDevotionalModal()">취소</button>
+      <button class="btn btn-primary" onclick="saveDevotional()">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+import { getFirestore, collection, doc, getDocs, addDoc, setDoc, updateDoc, deleteDoc,
+  onSnapshot, serverTimestamp, query, orderBy, where }
+  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+// ══════════════════════════════════════════════════════════
+// 🔧 Firebase 설정
+const firebaseConfig = {
+  apiKey:            "AIzaSyD-uNiAqgp54pREVGjZFL-cdXfBrhK8trU",
+  authDomain:        "motherwisekr.firebaseapp.com",
+  projectId:         "motherwisekr",
+  storageBucket:     "motherwisekr.firebasestorage.app",
+  messagingSenderId: "115848932002",
+  appId:             "1:115848932002:web:81966ecead06baaf0c45fb"
+};
+
+// 🔧 관리자 이메일 (구글 계정)
+const ADMIN_EMAILS = [
+  "iamspace@suwoncca.org",
+  // "추가할이메일@gmail.com",  ← 나중에 여기에 추가하면 됩니다
+];
+// ══════════════════════════════════════════════════════════
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+const DEFAULT_SEMINARS = [
+  { id:"wisdom",      order:0, icon:"🌿", module:"세미나 1", name:"지혜 (Wisdom)",      desc:"하나님의 말씀 위에서 지혜로운 어머니로 서는 법을 배웁니다.", open:true,  formUrl:"", schedule:"" },
+  { id:"freedom",     order:1, icon:"🕊️", module:"세미나 2", name:"자유 (Freedom)",     desc:"말씀 안에서 진정한 자유를 경험하는 과정입니다.",             open:true,  formUrl:"", schedule:"" },
+  { id:"restoration", order:2, icon:"💛", module:"세미나 3", name:"회복 (Restoration)", desc:"하나님의 은혜로 회복되는 여정을 함께 걷습니다.",             open:false, formUrl:"", schedule:"" },
+  { id:"together",    order:3, icon:"🤝", module:"세미나 4", name:"동행 (Together)",    desc:"어머니들이 공동체로 세워져 가는 핵심 과정입니다.",           open:false, formUrl:"", schedule:"" },
+];
+
+let seminarData = JSON.parse(JSON.stringify(DEFAULT_SEMINARS));
+let unsubs = [];
+
+// ── Auth ──
+const ADMIN_PIN = '1380';
+
+window.loginWithPin = function() {
+  const val = document.getElementById('pinInput').value;
+  const err = document.getElementById('pinError');
+  if (val === ADMIN_PIN) {
+    err.style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminApp').style.display = 'block';
+    document.getElementById('userName').textContent  = 'PIN 관리자';
+    document.getElementById('userEmail').textContent = '관리자 PIN 로그인';
+    document.getElementById('userAvatar').textContent = '🔑';
+    initAdmin();
+  } else {
+    err.style.display = 'block';
+    document.getElementById('pinInput').value = '';
+    document.getElementById('pinInput').focus();
+  }
+};
+
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  try { await signInWithPopup(auth, new GoogleAuthProvider()); }
+  catch (e) { toast('로그인 실패: ' + e.message, 'error'); }
+});
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  signOut(auth);
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('adminApp').style.display = 'none';
+  document.getElementById('pinInput').value = '';
+  unsubs.forEach(u => u()); unsubs = [];
+});
+
+onAuthStateChanged(auth, user => {
+  if (user) {
+    if (!ADMIN_EMAILS.includes(user.email)) {
+      signOut(auth); toast('접근 권한이 없습니다.', 'error'); return;
+    }
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminApp').style.display = 'block';
+    document.getElementById('userName').textContent  = user.displayName || '-';
+    document.getElementById('userEmail').textContent = user.email;
+    document.getElementById('userAvatar').textContent = (user.displayName || '?')[0];
+    initAdmin();
+  } else {
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('adminApp').style.display = 'none';
+    unsubs.forEach(u => u()); unsubs = [];
+  }
+});
+
+function initAdmin() {
+  loadSeminarsAdmin();
+  watchNews();
+  watchMessages();
+  loadRegionals();
+  renderBooksEditor();
+  renderAboutEditor();
+  watchMedia();
+  watchDevotionals();
+}
+
+// ── Nav ──
+document.querySelectorAll('.sidebar-item[data-tab]').forEach(el =>
+  el.addEventListener('click', () => switchTab(el.dataset.tab))
+);
+window.switchTab = function(tab) {
+  document.querySelectorAll('.sidebar-item').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + tab));
+  const titles = { dashboard:'대시보드', seminars:'세미나 관리', news:'소식 / 공지', books:'교재 안내', about:'단체 소개', regional:'지역교회', messages:'문의 메시지', media:'미디어 관리', devotional:'묵상 관리' };
+  document.getElementById('topbarTitle').textContent = titles[tab] || tab;
+};
+
+// ── Seminars ──
+async function loadSeminarsAdmin() {
+  try {
+    const snap = await getDocs(query(collection(db, 'mw_seminars'), orderBy('order')));
+    if (!snap.empty) seminarData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch {}
+  renderSeminarEdit();
+  document.getElementById('statSem').textContent = seminarData.length;
+}
+
+function renderSeminarEdit() {
+  document.getElementById('seminarEditList').innerHTML = seminarData.map((s, i) => `
+    <div class="seminar-edit-item">
+      <div class="seminar-edit-header" onclick="toggleSem(${i})">
+        <span class="seminar-edit-icon">${s.icon}</span>
+        <span class="seminar-edit-name">${s.name}</span>
+        <span class="seminar-edit-toggle" id="st-${i}">▼ 펼치기</span>
+      </div>
+      <div class="seminar-edit-body" id="sb-${i}">
+        <div class="form-group"><label>세미나 설명</label>
+          <textarea id="s-desc-${i}">${s.desc||''}</textarea></div>
+        <div class="form-row">
+          <div class="form-group"><label>일정 (예: 2025. 04. 05 오전 10시)</label>
+            <input type="text" id="s-schedule-${i}" value="${s.schedule||''}" placeholder="날짜 및 시간" /></div>
+          <div class="form-group"><label>구글폼 신청 URL</label>
+            <input type="url" id="s-form-${i}" value="${s.formUrl||''}" placeholder="https://forms.gle/..." />
+            <p class="form-hint">비워두면 신청 버튼이 비활성화됩니다</p></div>
+        </div>
+        <div class="form-group">
+          <label>신청 가능 여부</label>
+          <div class="toggle-wrap" style="margin-top:.35rem;">
+            <label class="toggle"><input type="checkbox" id="s-open-${i}" ${s.open ? 'checked' : ''} /><span class="toggle-slider"></span></label>
+            <span class="toggle-label">${s.open ? '신청 가능' : '마감'}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.toggleSem = function(i) {
+  const b = document.getElementById(`sb-${i}`);
+  const t = document.getElementById(`st-${i}`);
+  const open = b.classList.toggle('open');
+  t.textContent = open ? '▲ 접기' : '▼ 펼치기';
+};
+
+window.saveSeminars = async function() {
+  const updated = seminarData.map((s, i) => ({
+    ...s,
+    desc:     document.getElementById(`s-desc-${i}`)?.value.trim() || s.desc,
+    schedule: document.getElementById(`s-schedule-${i}`)?.value.trim() || '',
+    formUrl:  document.getElementById(`s-form-${i}`)?.value.trim() || '',
+    open:     document.getElementById(`s-open-${i}`)?.checked ?? s.open,
+  }));
+  try {
+    for (const s of updated) await setDoc(doc(db, 'mw_seminars', s.id), s);
+    seminarData = updated;
+    renderSeminarEdit();
+    toast('세미나 정보가 저장되었습니다 ✅', 'success');
+  } catch (e) { toast('저장 실패: ' + e.message, 'error'); }
+};
+
+// ── News ──
+function watchNews() {
+  const q = query(collection(db, 'mw_news'), orderBy('createdAt', 'desc'));
+  const unsub = onSnapshot(q, snap => {
+    const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderNewsList(items);
+    renderDashNews(items.slice(0, 3));
+    document.getElementById('newsBadge').textContent = items.length || '';
+    document.getElementById('statNews').textContent  = items.length;
+  }, () => {});
+  unsubs.push(unsub);
+}
+
+function renderNewsList(items) {
+  const el = document.getElementById('newsList');
+  if (!items.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div>작성된 소식이 없습니다.</div>'; return; }
+  el.innerHTML = items.map(item => `
+    <div class="list-item">
+      <div class="list-item-info">
+        <span class="list-item-tag">${item.category||'공지'}</span>
+        <div class="list-item-title">${item.title}</div>
+        <div class="list-item-meta">${item.date||''} ${item.published===false?'· <span style="color:var(--warning)">비공개</span>':''}</div>
+      </div>
+      <div class="list-item-actions">
+        <button class="btn btn-secondary btn-sm" onclick="openNewsModal('${item.id}')">✏️ 수정</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteNews('${item.id}')">삭제</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderDashNews(items) {
+  const el = document.getElementById('dashNews');
+  if (!items.length) { el.innerHTML = '<div style="font-size:.86rem;color:var(--text-light);">아직 소식이 없습니다. 첫 글을 작성해보세요!</div>'; return; }
+  el.innerHTML = items.map(item => `
+    <div class="list-item">
+      <div class="list-item-info">
+        <span class="list-item-tag">${item.category||'공지'}</span>
+        <div class="list-item-title">${item.title}</div>
+        <div class="list-item-meta">${item.date||''}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.openNewsModal = async function(docId) {
+  document.getElementById('nDocId').value = docId || '';
+  if (docId) {
+    document.getElementById('newsModalLabel').textContent = '소식 수정';
+    const snap = await getDocs(collection(db, 'mw_news'));
+    const d = snap.docs.find(x => x.id === docId)?.data();
+    if (d) {
+      document.getElementById('nCat').value      = d.category || '공지';
+      document.getElementById('nDate').value      = d.date     || '';
+      document.getElementById('nTitle').value     = d.title    || '';
+      document.getElementById('nExcerpt').value   = d.excerpt  || '';
+      document.getElementById('nContent').value   = d.content  || '';
+      document.getElementById('nPublished').value = String(d.published !== false);
+    }
+  } else {
+    document.getElementById('newsModalLabel').textContent = '새 소식 작성';
+    ['nCat','nDate','nTitle','nExcerpt','nContent'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('nCat').value = '세미나';
+    document.getElementById('nDate').value = new Date().toLocaleDateString('ko-KR', {year:'numeric',month:'2-digit',day:'2-digit'});
+    document.getElementById('nPublished').value = 'true';
+  }
+  document.getElementById('newsModal').classList.add('open');
+};
+window.closeNewsModal = () => document.getElementById('newsModal').classList.remove('open');
+
+window.saveNews = async function() {
+  const title = document.getElementById('nTitle').value.trim();
+  if (!title) { toast('제목을 입력해주세요', 'error'); return; }
+  const data = {
+    category:  document.getElementById('nCat').value,
+    date:      document.getElementById('nDate').value.trim(),
+    title,
+    excerpt:   document.getElementById('nExcerpt').value.trim(),
+    content:   document.getElementById('nContent').value.trim(),
+    published: document.getElementById('nPublished').value === 'true',
+  };
+  const docId = document.getElementById('nDocId').value;
+  try {
+    if (docId) { await updateDoc(doc(db, 'mw_news', docId), { ...data, updatedAt: serverTimestamp() }); toast('수정되었습니다', 'success'); }
+    else       { await addDoc(collection(db, 'mw_news'), { ...data, createdAt: serverTimestamp() }); toast('소식이 등록되었습니다 🌿', 'success'); }
+    closeNewsModal();
+  } catch (e) { toast('저장 실패: ' + e.message, 'error'); }
+};
+
+window.deleteNews = async function(docId) {
+  if (!confirm('삭제하시겠습니까?')) return;
+  try { await deleteDoc(doc(db, 'mw_news', docId)); toast('삭제되었습니다'); }
+  catch (e) { toast('삭제 실패', 'error'); }
+};
+
+// ── Books ──
+let booksData = { yeoyumolUrl: 'YEOYUMOL_URL_HERE', note: '' };
+
+function renderBooksEditor() {
+  document.getElementById('booksEditor').innerHTML = `
+    <div class="form-group">
+      <label>여유몰 URL (교재 구매 링크)</label>
+      <input type="url" id="b-url" value="${booksData.yeoyumolUrl}" placeholder="https://..." />
+      <p class="form-hint">여유몰 사이트 주소를 입력하면 '여유몰 바로가기' 버튼에 연결됩니다</p>
+    </div>
+    <div class="form-group">
+      <label>추가 안내 문구 (선택)</label>
+      <textarea id="b-note" placeholder="교재 구매 관련 추가 안내사항이 있으면 입력해주세요">${booksData.note||''}</textarea>
+    </div>
+  `;
+}
+
+window.saveBooks = async function() {
+  const data = {
+    yeoyumolUrl: document.getElementById('b-url').value.trim(),
+    note:        document.getElementById('b-note').value.trim(),
+  };
+  try {
+    await setDoc(doc(db, 'mw_settings', 'books'), data);
+    booksData = data;
+    toast('교재 안내가 저장되었습니다 ✅', 'success');
+  } catch (e) { toast('저장 실패: ' + e.message, 'error'); }
+};
+
+// ── About ──
+let aboutData = { heroDesc:'', aboutTitle:'', aboutDesc1:'', aboutDesc2:'', history:'' };
+
+function renderAboutEditor() {
+  document.getElementById('aboutEditor').innerHTML = `
+    <div class="form-group"><label>Hero 부제 설명</label>
+      <textarea id="ab-heroDesc" style="min-height:75px;">${aboutData.heroDesc}</textarea></div>
+    <div class="form-group"><label>About 섹션 제목</label>
+      <input type="text" id="ab-aboutTitle" value="${aboutData.aboutTitle}" placeholder="마더와이즈는 어떤 단체인가요?" /></div>
+    <div class="form-group"><label>소개 문단 1</label>
+      <textarea id="ab-aboutDesc1">${aboutData.aboutDesc1}</textarea></div>
+    <div class="form-group"><label>소개 문단 2</label>
+      <textarea id="ab-aboutDesc2">${aboutData.aboutDesc2}</textarea></div>
+    <div class="form-group"><label>연혁 / History (줄바꿈으로 구분)</label>
+      <textarea id="ab-history" style="min-height:100px;" placeholder="창립: 원천침례교회에서 마더와이즈 사역 시작&#10;확산: 전국 지역교회로 사역 퍼져나감&#10;현재: 지혜·자유·회복·동행 세미나 전국 진행 중">${aboutData.history||''}</textarea>
+      <p class="form-hint">"연도라벨: 내용" 형식으로 줄바꿈 입력. 예) 2005: 마더와이즈 창립</p>
+    </div>
+  `;
+}
+
+window.saveAbout = async function() {
+  const data = {
+    heroDesc:   document.getElementById('ab-heroDesc').value.trim(),
+    aboutTitle: document.getElementById('ab-aboutTitle').value.trim(),
+    aboutDesc1: document.getElementById('ab-aboutDesc1').value.trim(),
+    aboutDesc2: document.getElementById('ab-aboutDesc2').value.trim(),
+    history:    document.getElementById('ab-history').value.trim(),
+  };
+  try {
+    await setDoc(doc(db, 'mw_about', 'main'), data);
+    aboutData = data;
+    toast('단체 소개가 저장되었습니다 ✅', 'success');
+  } catch (e) { toast('저장 실패: ' + e.message, 'error'); }
+};
+
+// ── Regional ──
+async function loadRegionals() {
+  try {
+    const snap = await getDocs(collection(db, 'mw_regionals'));
+    const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderRegionalList(items);
+    document.getElementById('statReg').textContent = items.length;
+  } catch { renderRegionalList([]); }
+}
+
+function renderRegionalList(items) {
+  const el = document.getElementById('regionalList');
+  if (!items.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">📍</div>등록된 지역교회가 없습니다.</div>'; return; }
+  el.innerHTML = items.map(r => `
+    <div class="list-item">
+      <div class="list-item-info">
+        <div class="list-item-title">📍 ${r.region} — ${r.church}</div>
+        <div class="list-item-meta">${r.active ? '✅ 운영 중' : '준비 중'}</div>
+      </div>
+      <div class="list-item-actions">
+        <button class="btn btn-secondary btn-sm" onclick="openRegionalModal('${r.id}')">수정</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteRegional('${r.id}')">삭제</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.openRegionalModal = async function(docId) {
+  document.getElementById('regDocId').value = docId || '';
+  if (docId) {
+    document.getElementById('regModalLabel').textContent = '지역교회 수정';
+    const snap = await getDocs(collection(db, 'mw_regionals'));
+    const d = snap.docs.find(x => x.id === docId)?.data();
+    if (d) {
+      document.getElementById('regRegion').value  = d.region  || '';
+      document.getElementById('regChurch').value  = d.church  || '';
+      document.getElementById('regActive').checked = d.active ?? true;
+    }
+  } else {
+    document.getElementById('regModalLabel').textContent = '지역교회 추가';
+    document.getElementById('regRegion').value  = '';
+    document.getElementById('regChurch').value  = '';
+    document.getElementById('regActive').checked = true;
+  }
+  document.getElementById('regionalModal').classList.add('open');
+};
+window.closeRegionalModal = () => document.getElementById('regionalModal').classList.remove('open');
+
+window.saveRegional = async function() {
+  const region = document.getElementById('regRegion').value.trim();
+  const church = document.getElementById('regChurch').value.trim();
+  if (!region || !church) { toast('지역명과 교회명을 입력해주세요', 'error'); return; }
+  const data = { region, church, active: document.getElementById('regActive').checked };
+  const docId = document.getElementById('regDocId').value;
+  try {
+    if (docId) await setDoc(doc(db, 'mw_regionals', docId), data);
+    else       await addDoc(collection(db, 'mw_regionals'), data);
+    toast('저장되었습니다 ✅', 'success');
+    closeRegionalModal();
+    loadRegionals();
+  } catch (e) { toast('저장 실패: ' + e.message, 'error'); }
+};
+
+window.deleteRegional = async function(docId) {
+  if (!confirm('삭제하시겠습니까?')) return;
+  try { await deleteDoc(doc(db, 'mw_regionals', docId)); toast('삭제되었습니다'); loadRegionals(); }
+  catch (e) { toast('삭제 실패', 'error'); }
+};
+
+// ── Media ──
+function watchMedia() {
+  const q = query(collection(db, 'mw_media'), orderBy('createdAt', 'desc'));
+  const unsub = onSnapshot(q, snap => {
+    const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderMediaList(items);
+    document.getElementById('statMedia').textContent = items.length;
+  }, () => {});
+  unsubs.push(unsub);
+}
+
+function renderMediaList(items) {
+  const el = document.getElementById('mediaList');
+  if (!items.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">🎬</div>등록된 미디어가 없습니다.</div>'; return; }
+  el.innerHTML = items.map(item => `
+    <div class="list-item">
+      <img src="https://img.youtube.com/vi/${item.youtubeId}/mqdefault.jpg"
+           onerror="this.style.display='none'"
+           style="width:100px;height:62px;object-fit:cover;border-radius:6px;flex-shrink:0;" />
+      <div class="list-item-info">
+        <span class="list-item-tag">${item.type === 'podcast' ? '🎙️ 팟캐스트' : '🎥 강의영상'}</span>
+        <div class="list-item-title">${item.title}</div>
+        <div class="list-item-meta">${item.date || ''} · ID: ${item.youtubeId} ${item.published === false ? '· <span style="color:var(--warning)">비공개</span>' : ''}</div>
+      </div>
+      <div class="list-item-actions">
+        <button class="btn btn-secondary btn-sm" onclick="openMediaModal('${item.id}')">✏️ 수정</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteMedia('${item.id}')">삭제</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.openMediaModal = async function(docId) {
+  document.getElementById('mDocId').value = docId || '';
+  if (docId) {
+    document.getElementById('mediaModalLabel').textContent = '영상 수정';
+    const snap = await getDocs(collection(db, 'mw_media'));
+    const d = snap.docs.find(x => x.id === docId)?.data();
+    if (d) {
+      document.getElementById('mType').value      = d.type       || 'podcast';
+      document.getElementById('mTitle').value     = d.title      || '';
+      document.getElementById('mYoutubeId').value = d.youtubeId  || '';
+      document.getElementById('mDate').value      = d.date       || '';
+      document.getElementById('mDesc').value      = d.desc       || '';
+      document.getElementById('mPublished').value = String(d.published !== false);
+    }
+  } else {
+    document.getElementById('mediaModalLabel').textContent = '영상 추가';
+    ['mTitle','mYoutubeId','mDate','mDesc'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('mType').value = 'podcast';
+    document.getElementById('mDate').value = new Date().toLocaleDateString('ko-KR', {year:'numeric',month:'2-digit',day:'2-digit'});
+    document.getElementById('mPublished').value = 'true';
+  }
+  document.getElementById('mediaModal').classList.add('open');
+};
+window.closeMediaModal = () => document.getElementById('mediaModal').classList.remove('open');
+
+window.saveMedia = async function() {
+  const title     = document.getElementById('mTitle').value.trim();
+  const youtubeId = document.getElementById('mYoutubeId').value.trim();
+  if (!title || !youtubeId) { toast('제목과 유튜브 ID를 입력해주세요', 'error'); return; }
+  const data = {
+    type:      document.getElementById('mType').value,
+    title,
+    youtubeId,
+    date:      document.getElementById('mDate').value.trim(),
+    desc:      document.getElementById('mDesc').value.trim(),
+    published: document.getElementById('mPublished').value === 'true',
+  };
+  const docId = document.getElementById('mDocId').value;
+  try {
+    if (docId) { await updateDoc(doc(db, 'mw_media', docId), { ...data, updatedAt: serverTimestamp() }); toast('수정되었습니다', 'success'); }
+    else       { await addDoc(collection(db, 'mw_media'), { ...data, createdAt: serverTimestamp() }); toast('영상이 등록되었습니다 🎬', 'success'); }
+    closeMediaModal();
+  } catch (e) { toast('저장 실패: ' + e.message, 'error'); }
+};
+
+window.deleteMedia = async function(docId) {
+  if (!confirm('삭제하시겠습니까?')) return;
+  try { await deleteDoc(doc(db, 'mw_media', docId)); toast('삭제되었습니다'); }
+  catch (e) { toast('삭제 실패', 'error'); }
+};
+
+// ── Devotionals ──
+function watchDevotionals() {
+  const q = query(collection(db, 'mw_devotionals'), orderBy('createdAt', 'desc'));
+  const unsub = onSnapshot(q, snap => {
+    const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderDevotionalList(items);
+    document.getElementById('statDev').textContent = items.length;
+  }, () => {});
+  unsubs.push(unsub);
+}
+
+function renderDevotionalList(items) {
+  const el = document.getElementById('devotionalList');
+  if (!items.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">📖</div>등록된 묵상이 없습니다.</div>'; return; }
+  el.innerHTML = items.map(item => `
+    <div class="list-item">
+      <div class="list-item-info">
+        <span class="list-item-tag">${item.type === 'prayer' ? '🙏 기도문' : '📖 묵상노트'}</span>
+        <div class="list-item-title">${item.title}</div>
+        <div class="list-item-meta">${item.date || ''} ${item.scripture ? '· ' + item.scripture : ''} ${item.published === false ? '· <span style="color:var(--warning)">비공개</span>' : ''}</div>
+      </div>
+      <div class="list-item-actions">
+        <button class="btn btn-secondary btn-sm" onclick="openDevotionalModal('${item.id}')">✏️ 수정</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteDevotional('${item.id}')">삭제</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.openDevotionalModal = async function(docId) {
+  document.getElementById('dDocId').value = docId || '';
+  if (docId) {
+    document.getElementById('devModalLabel').textContent = '묵상 수정';
+    const snap = await getDocs(collection(db, 'mw_devotionals'));
+    const d = snap.docs.find(x => x.id === docId)?.data();
+    if (d) {
+      document.getElementById('dType').value      = d.type      || 'devotion';
+      document.getElementById('dTitle').value     = d.title     || '';
+      document.getElementById('dScripture').value = d.scripture || '';
+      document.getElementById('dDate').value      = d.date      || '';
+      document.getElementById('dContent').value   = d.content   || '';
+      document.getElementById('dPublished').value = String(d.published !== false);
+    }
+  } else {
+    document.getElementById('devModalLabel').textContent = '묵상 추가';
+    ['dTitle','dScripture','dDate','dContent'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('dType').value = 'devotion';
+    document.getElementById('dDate').value = new Date().toLocaleDateString('ko-KR', {year:'numeric',month:'2-digit',day:'2-digit'});
+    document.getElementById('dPublished').value = 'true';
+  }
+  document.getElementById('devotionalModal').classList.add('open');
+};
+window.closeDevotionalModal = () => document.getElementById('devotionalModal').classList.remove('open');
+
+window.saveDevotional = async function() {
+  const title   = document.getElementById('dTitle').value.trim();
+  const content = document.getElementById('dContent').value.trim();
+  if (!title || !content) { toast('제목과 본문을 입력해주세요', 'error'); return; }
+  const data = {
+    type:      document.getElementById('dType').value,
+    title,
+    scripture: document.getElementById('dScripture').value.trim(),
+    date:      document.getElementById('dDate').value.trim(),
+    content,
+    published: document.getElementById('dPublished').value === 'true',
+  };
+  const docId = document.getElementById('dDocId').value;
+  try {
+    if (docId) { await updateDoc(doc(db, 'mw_devotionals', docId), { ...data, updatedAt: serverTimestamp() }); toast('수정되었습니다', 'success'); }
+    else       { await addDoc(collection(db, 'mw_devotionals'), { ...data, createdAt: serverTimestamp() }); toast('묵상이 등록되었습니다 📖', 'success'); }
+    closeDevotionalModal();
+  } catch (e) { toast('저장 실패: ' + e.message, 'error'); }
+};
+
+window.deleteDevotional = async function(docId) {
+  if (!confirm('삭제하시겠습니까?')) return;
+  try { await deleteDoc(doc(db, 'mw_devotionals', docId)); toast('삭제되었습니다'); }
+  catch (e) { toast('삭제 실패', 'error'); }
+};
+
+// ── Messages ──
+function watchMessages() {
+  const q = query(collection(db, 'mw_contacts'), orderBy('createdAt', 'desc'));
+  const unsub = onSnapshot(q, snap => {
+    const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const unread = items.filter(i => !i.read).length;
+    document.getElementById('msgBadge').textContent = unread || '';
+    document.getElementById('statMsg').textContent  = unread;
+    renderMsgList(items);
+  }, () => {});
+  unsubs.push(unsub);
+}
+
+function renderMsgList(items) {
+  const el = document.getElementById('msgList');
+  if (!items.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div>아직 문의가 없습니다.</div>'; return; }
+  el.innerHTML = items.map(item => `
+    <div class="msg-item ${item.read?'':'unread'}" onclick="markRead('${item.id}')">
+      <div class="msg-header">
+        ${!item.read ? '<span style="width:8px;height:8px;border-radius:50%;background:var(--rose);flex-shrink:0;display:inline-block;"></span>' : ''}
+        <span class="msg-name">${item.name||'-'}</span>
+        <span class="msg-tag">${item.subject||'기타'}</span>
+        <span class="msg-date">${item.date||''}</span>
+      </div>
+      <div class="msg-body">${(item.message||'').replace(/\n/g,'<br>')}</div>
+      <div class="msg-contact">${item.phone?'📞 '+item.phone:''} ${item.email?'· 📧 '+item.email:''}</div>
+    </div>
+  `).join('');
+}
+
+window.markRead = async function(docId) {
+  try { await updateDoc(doc(db, 'mw_contacts', docId), { read: true }); } catch {}
+};
+window.markAllRead = async function() {
+  const snap = await getDocs(query(collection(db, 'mw_contacts'), where('read', '==', false)));
+  await Promise.all(snap.docs.map(d => updateDoc(d.ref, { read: true })));
+  toast('모두 읽음 처리되었습니다');
+};
+
+// ── Toast ──
+window.toast = function(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' ' + type : '');
+  setTimeout(() => { t.className = 'toast'; }, 3000);
+};
+</script>
+</body>
+</html>
