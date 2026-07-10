@@ -225,6 +225,15 @@
     .more-profile-title { font-family: 'Noto Serif KR', serif; font-size: 1.1rem; font-weight: 700; color: var(--brown); }
     .more-profile-desc { font-size: .78rem; color: var(--text-mid); margin-top: .2rem; line-height: 1.5; }
 
+    /* ── Family Sites ── */
+    .family-sites { margin: 0 1.2rem 1.2rem; padding: 1.2rem 0; }
+    .family-sites-label { display: flex; align-items: center; gap: .7rem; margin-bottom: .9rem; }
+    .family-sites-label::before, .family-sites-label::after { content: ''; flex: 1; height: 1px; background: rgba(160,112,96,.18); }
+    .family-sites-label span { font-size: .68rem; font-weight: 700; letter-spacing: .14em; color: var(--text-light); white-space: nowrap; }
+    .family-sites-row { display: flex; gap: .6rem; flex-wrap: wrap; justify-content: center; }
+    .family-site-pill { padding: .5rem 1.1rem; border-radius: 50px; border: 1.5px solid rgba(180,130,110,.25); background: var(--white); color: var(--brown); font-size: .82rem; font-weight: 600; text-decoration: none; transition: all .2s; }
+    .family-site-pill:hover, .family-site-pill:active { border-color: var(--rose); color: var(--rose-dark); }
+
     /* ── Modal / Sheet ── */
     .sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 100; opacity: 0; pointer-events: none; transition: opacity .25s; }
     .sheet-overlay.open { opacity: 1; pointer-events: all; }
@@ -343,9 +352,8 @@
         <div class="book-card"><div class="book-card-icon">💛</div><div class="book-card-title">회복</div><div class="book-card-sub">Restoration</div></div>
         <div class="book-card"><div class="book-card-icon">🤝</div><div class="book-card-title">동행</div><div class="book-card-sub">Together</div></div>
       </div>
-      <!-- 🔗 여유몰 URL을 href에 입력하세요 -->
       <div class="mall-cta">
-        <a href="YEOYUMOL_URL_HERE" target="_blank" class="btn btn-primary btn-block">🛍️ 여유몰에서 교재 구매하기</a>
+        <a href="https://motherwisemall.or.kr/" target="_blank" class="btn btn-primary btn-block">🛍️ 여유몰에서 교재 구매하기</a>
       </div>
       <div class="coming-soon">
         <div class="coming-soon-icon">🔔</div>
@@ -387,18 +395,12 @@
         </a>
       </div>
 
-      <div class="card" style="margin:0 1.2rem 1.2rem;border-radius:16px;overflow:hidden;">
-        <!-- 🔗 유관기관 URL을 href에 입력하세요 -->
-        <a class="more-menu-item" href="WONCHUN_URL_HERE" target="_blank">
-          <div class="more-menu-icon">⛪</div>
-          <div class="more-menu-text"><div class="more-menu-label">원천침례교회</div><div class="more-menu-desc">유관기관</div></div>
-          <span class="more-menu-arrow">›</span>
-        </a>
-        <a class="more-menu-item" href="https://www.suwoncca.org" target="_blank">
-          <div class="more-menu-icon">🏫</div>
-          <div class="more-menu-text"><div class="more-menu-label">중앙기독학교</div><div class="more-menu-desc">유관기관</div></div>
-          <span class="more-menu-arrow">›</span>
-        </a>
+      <div class="family-sites">
+        <div class="family-sites-label"><span>FAMILY SITES</span></div>
+        <div class="family-sites-row">
+          <a class="family-site-pill" href="http://wonchon.org/" target="_blank">원천침례교회</a>
+          <a class="family-site-pill" href="https://seoul.febc.net/" target="_blank">극동방송</a>
+        </div>
       </div>
 
       <!-- More sub-pages -->
